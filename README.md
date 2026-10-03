@@ -1,6 +1,8 @@
 # GORBO: 심장지킴이 🫀
 
 반려견·반려묘 **심장병(이첨판 폐쇄부전 등) 홈케어 PWA**입니다.
+
+**앱 바로 열기: https://plum98266-sketch.github.io/GORBO/** (휴대폰에서 열고 '홈 화면에 추가'하면 앱처럼 쓸 수 있습니다)
 한국 마이크로 니치 분석 결과는 [docs/market-analysis.md](docs/market-analysis.md)에 있습니다.
 
 ## 기능 (MVP v0.1)
