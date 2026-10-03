@@ -17,7 +17,7 @@
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #171412;
     --surface: #221e1b;
     --text: #f3ece7;
@@ -29,6 +29,18 @@
     --danger-soft: #3d1c1c;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+    --bg: #171412;
+    --surface: #221e1b;
+    --text: #f3ece7;
+    --muted: #a99d96;
+    --line: #362f2b;
+    --brand-soft: #3a2224;
+    --ok-soft: #173126;
+    --warn-soft: #3a2d10;
+    --danger-soft: #3d1c1c;
+    color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -182,6 +194,15 @@ th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line
   background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 99px; font-size: 14px;
   transition: all .2s; max-width: calc(100vw - 32px);
 }
+.sheet-backdrop {
+  position: fixed; inset: 0; z-index: 20; background: rgb(0 0 0 / .4);
+  display: flex; align-items: flex-end; justify-content: center; padding: 16px;
+}
+.sheet {
+  width: 100%; max-width: 480px; background: var(--surface); border-radius: var(--radius);
+  padding: 20px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px;
+}
+.btn:focus-visible, .chip:focus-visible, .dose:focus-visible, .tap-zone:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
 .toast.show { opacity: 1; transform: translateX(-50%); }
 
 .disclaimer { font-size: 12px; color: var(--muted); margin-top: 16px; }

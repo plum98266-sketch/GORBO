@@ -19,6 +19,12 @@ npm test       # 핵심 로직 단위 테스트 (node:test)
 ```
 빌드 단계가 없는 정적 사이트라서 `app/` 폴더를 GitHub Pages, Netlify, Vercel 등에 그대로 올리면 배포됩니다.
 
+## 배포
+- **GitHub Pages (자동)**: `main`에 머지되면 `.github/workflows/deploy.yml`이 테스트를 돌린 뒤 `app/`을 Pages로 배포합니다.
+  - 처음 한 번 **Settings → Pages → Source: GitHub Actions**를 선택해야 합니다.
+  - 비공개 저장소는 GitHub Pro 이상 플랜에서만 Pages를 쓸 수 있습니다. 무료 플랜이면 저장소를 공개로 바꾸거나 Netlify/Vercel에 `app/` 폴더를 연결하세요.
+- **claude.ai 미리보기**: `node scripts/build-preview.mjs`가 `dist-preview/`를 만듭니다. 이 빌드는 서비스 워커를 끄고, 미리보기에서 막히는 인쇄·파일 다운로드 버튼을 숨깁니다.
+
 ## 구조
 ```
 app/
@@ -27,6 +33,8 @@ app/
   js/store.js   localStorage 저장/불러오기
   js/app.js     화면 렌더링과 이벤트
 tests/core.test.mjs
+scripts/build-preview.mjs   미리보기용 빌드
+.github/workflows/deploy.yml  테스트 + GitHub Pages 배포
 docs/market-analysis.md
 ```
 

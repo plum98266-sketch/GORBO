@@ -5,6 +5,8 @@ import {
 import { load, save } from './store.js';
 
 let data = load();
+// 미리보기(임베드) 환경에서는 인쇄·파일 다운로드가 막혀 있어 해당 버튼을 숨긴다.
+const EMBED = Boolean(window.__SIMJANG_EMBED);
 let tab = 'home';
 const view = document.getElementById('view');
 
@@ -26,6 +28,26 @@ const symptomLabel = (id) => SYMPTOMS.find((s) => s.id === id)?.label || id;
 
 function persist() {
   if (!save(data)) toast('저장 공간에 저장하지 못했어요. 백업 파일을 내보내 주세요.');
+}
+
+// 브라우저 기본 확인창은 일부 환경(앱 내 웹뷰, 미리보기)에서 막히므로 화면 안에서 묻는다.
+function ask(message, okLabel = '삭제') {
+  return new Promise((resolve) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'sheet-backdrop';
+    wrap.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="확인">
+      <p>${esc(message)}</p>
+      <div class="row"><button class="btn" data-a="no">취소</button><button class="btn primary" data-a="yes">${esc(okLabel)}</button></div>
+    </div>`;
+    const close = (v) => { wrap.remove(); resolve(v); };
+    wrap.addEventListener('click', (e) => {
+      if (e.target === wrap) return close(false);
+      const a = e.target.closest('[data-a]')?.dataset.a;
+      if (a) close(a === 'yes');
+    });
+    document.body.append(wrap);
+    wrap.querySelector('[data-a="yes"]').focus();
+  });
 }
 
 let toastTimer;
@@ -343,8 +365,8 @@ function renderMeds() {
     </section>`;
 
   view.querySelectorAll('.dose').forEach((b) => (b.onclick = () => { toggleDose(b.dataset.slot); renderMeds(); }));
-  view.querySelectorAll('[data-del]').forEach((b) => (b.onclick = () => {
-    if (!confirm('이 약을 삭제할까요? 지난 복용 기록은 리포트에서 빠집니다.')) return;
+  view.querySelectorAll('[data-del]').forEach((b) => (b.onclick = async () => {
+    if (!(await ask('이 약을 삭제할까요? 지난 복용 기록은 리포트에서 빠집니다.'))) return;
     data.meds = data.meds.filter((m) => m.id !== b.dataset.del);
     persist();
     renderMeds();
@@ -411,14 +433,14 @@ function renderLog() {
     toast('기록했어요');
     renderLog();
   };
-  view.querySelectorAll('[data-delsx]').forEach((b) => (b.onclick = () => {
-    if (!confirm('이 기록을 삭제할까요?')) return;
+  view.querySelectorAll('[data-delsx]').forEach((b) => (b.onclick = async () => {
+    if (!(await ask('이 기록을 삭제할까요?'))) return;
     data.symptoms = data.symptoms.filter((s) => s.id !== b.dataset.delsx);
     persist();
     renderLog();
   }));
-  view.querySelectorAll('[data-delrec]').forEach((b) => (b.onclick = () => {
-    if (!confirm('이 측정 기록을 삭제할까요?')) return;
+  view.querySelectorAll('[data-delrec]').forEach((b) => (b.onclick = async () => {
+    if (!(await ask('이 측정 기록을 삭제할까요?'))) return;
     data.records = data.records.filter((r) => r.id !== b.dataset.delrec);
     persist();
     renderLog();
@@ -463,7 +485,7 @@ function renderReport() {
       ${sx.length ? `<table><tr><th>증상</th><th>기록 횟수</th></tr>${sx.map(([id, n]) => `<tr><td>${esc(symptomLabel(id))}</td><td>${n}</td></tr>`).join('')}</table>` : '<p class="muted">기록된 증상 없음</p>'}
       ${r.notes.length ? `<h2 style="margin-top:14px">보호자 메모</h2><ul class="list">${r.notes.slice(0, 15).map((n) => `<li><span class="grow"><span class="muted small">${fmtTime(n.at)}</span><br>${esc(n.note)}</span></li>`).join('')}</ul>` : ''}
     </section>
-    <button class="btn primary block no-print" id="print">🖨 인쇄 · PDF로 저장</button>
+    ${EMBED ? '<p class="muted small no-print">인쇄·PDF 저장은 설치한 앱에서 할 수 있어요. 진료 때는 이 화면을 그대로 보여주세요.</p>' : '<button class="btn primary block no-print" id="print">🖨 인쇄 · PDF로 저장</button>'}
     <p class="disclaimer">보호자가 집에서 직접 측정한 기록입니다. 진단은 수의사의 판단을 따르세요. 심장지킴이에서 만들었습니다.</p>`;
   document.getElementById('rd').onclick = (e) => {
     const b = e.target.closest('button');
@@ -471,7 +493,7 @@ function renderReport() {
     reportDays = Number(b.dataset.v);
     renderReport();
   };
-  document.getElementById('print').onclick = () => window.print();
+  document.getElementById('print')?.addEventListener('click', () => window.print());
 }
 
 // ---------- 화면: 설정 ----------
@@ -496,7 +518,8 @@ function renderSettings() {
       <h2>백업</h2>
       <p class="muted small">기록은 이 기기에만 저장돼요. 휴대폰을 바꾸거나 브라우저 데이터를 지우기 전에 백업 파일을 내보내 두세요.</p>
       <div class="row">
-        <button class="btn" id="export">내보내기</button>
+        ${EMBED ? '' : '<button class="btn" id="export">내보내기</button>'}
+        <button class="btn" id="copy-backup">백업 복사</button>
         <label class="btn" style="margin:0;color:inherit">가져오기<input type="file" id="import" accept="application/json,.json" hidden></label>
       </div>
     </section>
@@ -517,10 +540,11 @@ function renderSettings() {
   };
   view.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => { data.activePetId = b.dataset.pick; persist(); go('home'); }));
   document.getElementById('add-pet').onclick = renderAddPet;
-  document.getElementById('export').onclick = exportBackup;
+  document.getElementById('export')?.addEventListener('click', exportBackup);
+  document.getElementById('copy-backup').onclick = copyBackup;
   document.getElementById('import').onchange = importBackup;
-  document.getElementById('del-pet').onclick = () => {
-    if (!confirm(`${p.name}의 모든 기록을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+  document.getElementById('del-pet').onclick = async () => {
+    if (!(await ask(`${p.name}의 모든 기록을 삭제할까요? 되돌릴 수 없습니다.`))) return;
     data.pets = data.pets.filter((x) => x.id !== p.id);
     data.records = data.records.filter((x) => x.petId !== p.id);
     data.meds = data.meds.filter((x) => x.petId !== p.id);
@@ -560,12 +584,19 @@ function exportBackup() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+function copyBackup() {
+  const text = JSON.stringify(data);
+  Promise.resolve(navigator.clipboard?.writeText(text) ?? Promise.reject())
+    .then(() => toast('백업을 복사했어요. 메모앱 등에 붙여 넣어 보관하세요.'))
+    .catch(() => toast('복사하지 못했어요. 내보내기를 이용해 주세요.'));
+}
+
 async function importBackup(e) {
   const file = e.target.files?.[0];
   if (!file) return;
   try {
     const next = normalizeData(JSON.parse(await file.text()));
-    if (!confirm('지금 기록을 백업 파일 내용으로 바꿀까요?')) return;
+    if (!(await ask('지금 기록을 백업 파일 내용으로 바꿀까요?', '바꾸기'))) return;
     data = next;
     persist();
     toast('가져왔어요');
@@ -613,7 +644,7 @@ document.getElementById('pet-switch').onclick = () => {
   go(tab);
 };
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+if (!EMBED && 'serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
