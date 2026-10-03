@@ -22,8 +22,8 @@ jobs:
         run: for f in app/js/*.js app/sw.js; do node --check "$f"; done
 
   deploy:
-    # main에 머지될 때만 GitHub Pages로 배포한다.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # main에 머지될 때(또는 main에서 수동 실행할 때)만 GitHub Pages로 배포한다.
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: test
     runs-on: ubuntu-latest
     # 잡 단위 permissions는 상위 설정을 덮어쓰므로 checkout용 contents: read도 다시 적어야 한다.
