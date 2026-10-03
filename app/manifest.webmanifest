@@ -1,0 +1,14 @@
+{
+  "name": "심장지킴이 - 반려동물 심장병 홈케어",
+  "short_name": "심장지킴이",
+  "description": "수면 호흡수 측정, 심장약 투약 체크, 진료 리포트",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf7f4",
+  "theme_color": "#e8505b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
