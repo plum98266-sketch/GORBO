@@ -1,6 +1,6 @@
 // 오프라인 지원: 앱 셸을 캐시하고 네트워크가 되면 최신본으로 갱신한다(stale-while-revalidate).
-const CACHE = 'simjang-v1';
-const SHELL = ['./', 'index.html', 'styles.css', 'js/app.js', 'js/core.js', 'js/store.js', 'manifest.webmanifest', 'icon.svg'];
+const CACHE = 'simjang-v2';
+const SHELL = ['./', 'index.html', 'styles.css', 'js/app.js', 'js/core.js', 'js/store.js', 'js/config.js', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

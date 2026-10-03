@@ -148,7 +148,42 @@ export function buildReport(pet, data, endKey, days = 30) {
 }
 
 export function emptyData() {
-  return { version: 1, pets: [], records: [], meds: [], taken: {}, symptoms: [], activePetId: null };
+  return { version: 1, pets: [], records: [], meds: [], taken: {}, symptoms: [], activePetId: null, activeDays: [], reportViews: 0 };
+}
+
+/** 앱을 연 날을 기록한다(중복 없이, 최근 400일까지). 바뀌었으면 true. */
+export function markActiveDay(data, key) {
+  if (data.activeDays.includes(key)) return false;
+  data.activeDays.push(key);
+  data.activeDays.sort();
+  if (data.activeDays.length > 400) data.activeDays.splice(0, data.activeDays.length - 400);
+  return true;
+}
+
+/**
+ * 베타 검증용 익명 사용 요약. 이름·메모 같은 개인 내용은 담지 않는다.
+ * retained7: 첫 사용 후 7~13일 사이에 다시 연 적이 있는가 (7일 리텐션)
+ */
+export function usageSummary(data, todayKey) {
+  const days = data.activeDays;
+  const first = days[0] || todayKey;
+  const sinceDays = Math.round((Date.parse(todayKey) - Date.parse(first)) / 864e5);
+  const w7 = new Set(lastNDays(todayKey, 7));
+  const d7 = addDays(first, 7);
+  const d13 = addDays(first, 13);
+  return {
+    firstUse: first,
+    sinceDays,
+    activeDays: days.length,
+    activeLast7: days.filter((k) => w7.has(k)).length,
+    retained7: sinceDays >= 7 ? days.some((k) => k >= d7 && k <= d13) : null,
+    pets: data.pets.length,
+    species: [...new Set(data.pets.map((p) => p.species || 'dog'))].join('+') || '-',
+    records: data.records.length,
+    meds: data.meds.length,
+    symptoms: data.symptoms.length,
+    reportViews: data.reportViews || 0,
+  };
 }
 
 /** 가져온 백업을 검증·정규화한다. 잘못된 형식이면 예외를 던진다. */
@@ -162,6 +197,8 @@ export function normalizeData(raw) {
     meds: Array.isArray(raw.meds) ? raw.meds : [],
     symptoms: Array.isArray(raw.symptoms) ? raw.symptoms : [],
     taken: raw.taken && typeof raw.taken === 'object' ? raw.taken : {},
+    activeDays: Array.isArray(raw.activeDays) ? raw.activeDays.filter((k) => typeof k === 'string') : [],
+    reportViews: Number(raw.reportViews) || 0,
   };
 }
 

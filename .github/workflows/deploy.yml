@@ -26,7 +26,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
+    # 잡 단위 permissions는 상위 설정을 덮어쓰므로 checkout용 contents: read도 다시 적어야 한다.
     permissions:
+      contents: read
       pages: write
       id-token: write
     environment:

@@ -17,5 +17,5 @@ ${css}
 <script>window.__SIMJANG_EMBED = true;</script>
 ${body}
 `);
-for (const f of ['app.js', 'core.js', 'store.js']) copyFileSync(`app/js/${f}`, `${out}/js/${f}`);
+for (const f of ['app.js', 'core.js', 'store.js', 'config.js']) copyFileSync(`app/js/${f}`, `${out}/js/${f}`);
 console.log(`built ${out}/`);

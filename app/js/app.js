@@ -1,7 +1,8 @@
 import {
   DEFAULT_THRESHOLD, SYMPTOMS, breathsPerMinute, dayKey, lastNDays, dailyAverages,
-  assess, dosesForDay, buildReport, normalizeData, emptyData, uid,
+  assess, dosesForDay, buildReport, normalizeData, emptyData, uid, markActiveDay, usageSummary,
 } from './core.js';
+import { FEEDBACK_URL, APP_VERSION } from './config.js';
 import { load, save } from './store.js';
 
 let data = load();
@@ -524,10 +525,19 @@ function renderSettings() {
       </div>
     </section>
     <section class="card">
+      <h2>베타 참여</h2>
+      <p class="muted small">이름이나 메모 없이 사용한 날 수와 기록 개수만 담긴 요약이에요. 설문에 붙여 넣어 주시면 앱을 다듬는 데 큰 도움이 됩니다.</p>
+      <pre class="usage" id="usage-text">${esc(usageText())}</pre>
+      <div class="row">
+        <button class="btn" id="copy-usage">사용 요약 복사</button>
+        ${FEEDBACK_URL ? `<a class="btn primary" href="${esc(FEEDBACK_URL)}" target="_blank" rel="noopener">의견 보내기</a>` : ''}
+      </div>
+    </section>
+    <section class="card">
       <h2>삭제</h2>
       <button class="btn danger block" id="del-pet">${esc(p.name)} 기록 전체 삭제</button>
     </section>
-    <p class="disclaimer">심장지킴이 v0.1 · 이 앱은 의료기기가 아니며 진단·치료를 대신하지 않습니다.</p>`;
+    <p class="disclaimer">심장지킴이 v${APP_VERSION} · 이 앱은 의료기기가 아니며 진단·치료를 대신하지 않습니다.</p>`;
 
   bindSeg('pf-species');
   document.getElementById('pf-save').onclick = () => {
@@ -542,6 +552,7 @@ function renderSettings() {
   document.getElementById('add-pet').onclick = renderAddPet;
   document.getElementById('export')?.addEventListener('click', exportBackup);
   document.getElementById('copy-backup').onclick = copyBackup;
+  document.getElementById('copy-usage').onclick = () => copyText(usageText(), '사용 요약을 복사했어요.');
   document.getElementById('import').onchange = importBackup;
   document.getElementById('del-pet').onclick = async () => {
     if (!(await ask(`${p.name}의 모든 기록을 삭제할까요? 되돌릴 수 없습니다.`))) return;
@@ -584,11 +595,27 @@ function exportBackup() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-function copyBackup() {
-  const text = JSON.stringify(data);
+function copyText(text, okMsg) {
   Promise.resolve(navigator.clipboard?.writeText(text) ?? Promise.reject())
-    .then(() => toast('백업을 복사했어요. 메모앱 등에 붙여 넣어 보관하세요.'))
-    .catch(() => toast('복사하지 못했어요. 내보내기를 이용해 주세요.'));
+    .then(() => toast(okMsg))
+    .catch(() => toast('복사하지 못했어요. 글자를 길게 눌러 직접 복사해 주세요.'));
+}
+
+function copyBackup() {
+  copyText(JSON.stringify(data), '백업을 복사했어요. 메모앱 등에 붙여 넣어 보관하세요.');
+}
+
+function usageText() {
+  const u = usageSummary(data, today());
+  const ret = u.retained7 == null ? `아직 (${u.sinceDays}일째)` : u.retained7 ? '예' : '아니오';
+  return [
+    `[심장지킴이 ${APP_VERSION} 사용 요약]`,
+    `사용 시작: ${u.firstUse} (${u.sinceDays ? `${u.sinceDays}일 전` : "오늘"})`,
+    `사용한 날: ${u.activeDays}일 · 최근 7일 중 ${u.activeLast7}일`,
+    `첫 주 이후 재방문: ${ret}`,
+    `반려동물: ${u.pets}마리 (${u.species})`,
+    `호흡수 측정 ${u.records}회 · 약 ${u.meds}개 · 증상 ${u.symptoms}건 · 리포트 열람 ${u.reportViews}회`,
+  ].join('\n');
 }
 
 async function importBackup(e) {
@@ -617,6 +644,7 @@ function updateHeader() {
 
 function go(next) {
   if (tab === 'measure' && next !== 'measure' && session.state === 'running') resetSession();
+  if (next === 'report' && tab !== 'report') { data.reportViews = (data.reportViews || 0) + 1; persist(); }
   tab = next;
   if (data.pets.length && !pet()) data.activePetId = data.pets[0].id;
   updateHeader();
@@ -651,4 +679,9 @@ if (!EMBED && 'serviceWorker' in navigator && location.protocol !== 'file:') {
 // 디버그/테스트용 진입점
 window.__simjang = { reset: () => { data = emptyData(); persist(); go('home'); } };
 
+if (markActiveDay(data, today())) persist();
+// 켜 둔 채로 날짜가 바뀐 뒤 다시 볼 때도 사용한 날로 센다
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && markActiveDay(data, today())) persist();
+});
 go('home');

@@ -1,6 +1,6 @@
 {
   "name": "simjang-jikimi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "반려동물 심장병 홈케어 PWA - 수면 호흡수 측정, 투약 체크, 진료 리포트",
   "type": "module",

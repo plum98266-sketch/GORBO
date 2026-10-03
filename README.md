@@ -31,12 +31,18 @@ app/
   index.html, styles.css, manifest.webmanifest, sw.js, icon.svg
   js/core.js    순수 로직 (호흡수 계산, 경고 판단, 순응도, 리포트), 테스트 대상
   js/store.js   localStorage 저장/불러오기
+  js/config.js  베타 설정 (설문 주소, 버전)
   js/app.js     화면 렌더링과 이벤트
 tests/core.test.mjs
 scripts/build-preview.mjs   미리보기용 빌드
 .github/workflows/deploy.yml  테스트 + GitHub Pages 배포
 docs/market-analysis.md
 ```
+
+## 베타 운영
+베타 모집 글, 설문 문항, 4주 판단 기준은 [docs/beta-launch.md](docs/beta-launch.md)에 있습니다.
+- 설정 → '베타 참여'에서 이름·메모가 빠진 익명 사용 요약(사용한 날, 7일 리텐션, 기록 개수)을 복사할 수 있습니다.
+- `app/js/config.js`의 `FEEDBACK_URL`에 설문 주소를 넣으면 '의견 보내기' 버튼이 나타납니다.
 
 ## 다음 단계
 1. 네이버 카페(강아지 심장병 보호자 모임)와 인스타그램 노견 계정에 베타를 배포하고 4주 지표를 확인합니다(설치 100명, 7일 리텐션 40%).
