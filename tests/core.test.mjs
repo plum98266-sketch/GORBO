@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   breathsPerMinute, dayKey, addDays, lastNDays, dailyAverages, stats, assess,
-  dosesForDay, adherence, buildReport, emptyData, normalizeData,
+  dosesForDay, adherence, buildReport, emptyData, normalizeData, markActiveDay, usageSummary,
 } from '../app/js/core.js';
 
 const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
@@ -90,4 +90,39 @@ test('normalizeData rejects junk and fills defaults', () => {
   const d = normalizeData({ pets: [{ id: 'x' }] });
   assert.deepEqual(d.records, []);
   assert.deepEqual(d.taken, {});
+});
+
+test('markActiveDay dedupes and keeps order', () => {
+  const d = emptyData();
+  assert.equal(markActiveDay(d, '2026-01-03'), true);
+  assert.equal(markActiveDay(d, '2026-01-01'), true);
+  assert.equal(markActiveDay(d, '2026-01-03'), false);
+  assert.deepEqual(d.activeDays, ['2026-01-01', '2026-01-03']);
+});
+
+test('usageSummary computes 7-day retention without personal content', () => {
+  const d = emptyData();
+  d.pets.push({ id: 'p', name: '비밀이름', species: 'dog' });
+  d.records.push({ petId: 'p', at: 1, bpm: 20, note: '비밀메모' });
+  for (const k of ['2026-01-01', '2026-01-02', '2026-01-09']) markActiveDay(d, k);
+  const u = usageSummary(d, '2026-01-10');
+  assert.equal(u.sinceDays, 9);
+  assert.equal(u.activeDays, 3);
+  assert.equal(u.retained7, true);
+  assert.equal(u.activeLast7, 1);
+  assert.equal(u.records, 1);
+  assert.ok(!JSON.stringify(u).includes('비밀'));
+  // 7일이 안 지났으면 리텐션은 아직 판단하지 않는다
+  assert.equal(usageSummary(d, '2026-01-05').retained7, null);
+  // 첫 주 이후 돌아오지 않은 경우
+  const e = emptyData();
+  markActiveDay(e, '2026-01-01');
+  assert.equal(usageSummary(e, '2026-01-20').retained7, false);
+});
+
+test('normalizeData keeps usage fields from old backups', () => {
+  const d = normalizeData({ pets: [], activeDays: ['2026-01-01', 5], reportViews: '3' });
+  assert.deepEqual(d.activeDays, ['2026-01-01']);
+  assert.equal(d.reportViews, 3);
+  assert.deepEqual(normalizeData({ pets: [] }).activeDays, []);
 });
