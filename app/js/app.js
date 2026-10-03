@@ -1,6 +1,6 @@
 import {
   DEFAULT_THRESHOLD, SYMPTOMS, breathsPerMinute, dayKey, lastNDays, dailyAverages,
-  assess, dosesForDay, buildReport, normalizeData, emptyData, uid, markActiveDay, usageSummary,
+  assess, dosesForDay, buildReport, normalizeData, emptyData, uid, markActiveDay, usageSummary, installContext,
 } from './core.js';
 import { FEEDBACK_URL, APP_VERSION } from './config.js';
 import { load, save } from './store.js';
@@ -124,7 +124,9 @@ function bindSeg(id) {
 }
 
 function renderOnboarding() {
+  // 카톡·카페 앱 안에서 연 경우, 기록을 시작하기 전에 브라우저를 바꾸도록 먼저 알린다
   view.innerHTML = `
+    ${installHint({ inappOnly: true })}
     <h1>심장지킴이 🫀</h1>
     <p class="muted">심장병이 있는 아이의 <b>수면 호흡수</b>, <b>심장약</b>, <b>증상</b>을 한곳에 기록하고 진료 때 수의사에게 보여주세요.</p>
     <div class="card">
@@ -135,6 +137,7 @@ function renderOnboarding() {
     </div>
     <p class="disclaimer">이 앱은 기록을 돕는 도구이며 진단·치료를 대신하지 않습니다. 호흡이 힘들어 보이거나 잇몸이 파랗다면 바로 동물병원에 연락하세요.</p>`;
   bindSeg('pf-species');
+  bindInstallHint();
   document.getElementById('pf-save').onclick = () => {
     const v = readPetForm();
     if (!v) return;
@@ -144,6 +147,67 @@ function renderOnboarding() {
     persist();
     go('home');
   };
+}
+
+// ---------- 홈 화면 설치 안내 ----------
+let installPrompt = null; // 안드로이드 Chrome이 주는 설치 이벤트
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPrompt = e;
+  if (tab === 'home' && data.pets.length) renderHome();
+});
+window.addEventListener('appinstalled', () => {
+  data.installHintHidden = true;
+  persist();
+});
+
+function isStandalone() {
+  return window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+function installHint({ inappOnly = false } = {}) {
+  if (EMBED || data.installHintHidden) return '';
+  const ctx = installContext(navigator.userAgent, isStandalone());
+  if (inappOnly && !['kakao', 'naver', 'inapp'].includes(ctx)) return '';
+  const inappNote = '<p class="muted small">앱 안 브라우저에 저장한 기록은 Safari·Chrome으로 옮겨지지 않으니, 먼저 브라우저를 바꾼 뒤 기록을 시작하세요.</p>';
+  const body = {
+    kakao: `<p>카카오톡 안에서는 홈 화면에 추가할 수 없어요.</p>${inappNote}
+      <button class="btn primary block" id="ih-external">Safari·Chrome으로 열기</button>`,
+    naver: `<p>네이버 앱 안에서는 홈 화면에 추가할 수 없어요. 오른쪽 아래 메뉴에서 <b>다른 브라우저로 열기</b>를 누르거나, 링크를 복사해 Safari·Chrome에 붙여 넣어 주세요.</p>${inappNote}
+      <button class="btn block" id="ih-copy">링크 복사</button>`,
+    inapp: `<p>앱 안 브라우저에서는 홈 화면에 추가할 수 없어요. 메뉴(⋯)에서 <b>브라우저로 열기</b>를 누르거나, 링크를 복사해 Safari·Chrome에 붙여 넣어 주세요.</p>${inappNote}
+      <button class="btn block" id="ih-copy">링크 복사</button>`,
+    ios: '<p>Safari 아래쪽 <b>공유 버튼</b>(네모에 위쪽 화살표)을 누르고 <b>홈 화면에 추가</b>를 고르면 앱처럼 바로 열 수 있어요.</p>',
+    android: installPrompt
+      ? '<p>홈 화면에 설치하면 앱처럼 바로 열 수 있어요.</p><button class="btn primary block" id="ih-install">앱 설치</button>'
+      : '<p>Chrome 오른쪽 위 메뉴(⋮)에서 <b>홈 화면에 추가</b> 또는 <b>앱 설치</b>를 누르면 앱처럼 바로 열 수 있어요.</p>',
+  }[ctx];
+  if (!body) return '';
+  return `<section class="card install-hint" aria-label="홈 화면에 추가">
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h2 style="margin:0">📲 홈 화면에 추가하기</h2>
+      <button class="x-btn" id="ih-close" aria-label="안내 닫기">✕</button></div>
+    ${body}
+  </section>`;
+}
+
+function bindInstallHint() {
+  document.getElementById('ih-close')?.addEventListener('click', () => {
+    data.installHintHidden = true;
+    persist();
+    go(tab);
+  });
+  document.getElementById('ih-external')?.addEventListener('click', () => {
+    location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(location.href)}`;
+  });
+  document.getElementById('ih-copy')?.addEventListener('click', () => copyText(location.href, '링크를 복사했어요. Safari·Chrome 주소창에 붙여 넣어 주세요.'));
+  document.getElementById('ih-install')?.addEventListener('click', async () => {
+    const p = installPrompt;
+    installPrompt = null;
+    p.prompt();
+    const { outcome } = await p.userChoice;
+    if (outcome === 'accepted') { data.installHintHidden = true; persist(); }
+    go(tab);
+  });
 }
 
 // ---------- 화면: 홈 ----------
@@ -166,6 +230,7 @@ function renderHome() {
   const left = doses.filter((d) => !takenToday[d.slot]);
 
   view.innerHTML = `
+    ${installHint()}
     <section class="card status ${a.level}">
       <p class="muted small">최근 수면 호흡수</p>
       <div class="big">${a.last ? `${a.last.bpm}<small> 회/분</small>` : '–'}</div>
@@ -192,6 +257,7 @@ function renderHome() {
     </section>`;
 
   view.querySelectorAll('.dose').forEach((b) => (b.onclick = () => { toggleDose(b.dataset.slot); renderHome(); }));
+  bindInstallHint();
 }
 
 function toggleDose(slot, key = today()) {

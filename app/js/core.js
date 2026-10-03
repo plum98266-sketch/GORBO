@@ -147,6 +147,21 @@ export function buildReport(pet, data, endKey, days = 30) {
   };
 }
 
+/**
+ * 홈 화면 설치 안내를 어떻게 보여줄지 결정한다.
+ * standalone: 이미 설치해서 실행 중 / kakao·naver·inapp: 앱 내 브라우저(설치 불가) /
+ * ios: Safari 공유 메뉴 / android: Chrome 설치 / desktop
+ */
+export function installContext(ua = '', standalone = false) {
+  if (standalone) return 'standalone';
+  if (/KAKAOTALK/i.test(ua)) return 'kakao';
+  if (/NAVER\(inapp|NAVER\//i.test(ua)) return 'naver';
+  if (/Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp|; wv\)/i.test(ua)) return 'inapp';
+  if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+  if (/Android/i.test(ua)) return 'android';
+  return 'desktop';
+}
+
 export function emptyData() {
   return { version: 1, pets: [], records: [], meds: [], taken: {}, symptoms: [], activePetId: null, activeDays: [], reportViews: 0 };
 }

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   breathsPerMinute, dayKey, addDays, lastNDays, dailyAverages, stats, assess,
-  dosesForDay, adherence, buildReport, emptyData, normalizeData, markActiveDay, usageSummary,
+  dosesForDay, adherence, buildReport, emptyData, normalizeData, markActiveDay, usageSummary, installContext,
 } from '../app/js/core.js';
 
 const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
@@ -125,4 +125,21 @@ test('normalizeData keeps usage fields from old backups', () => {
   assert.deepEqual(d.activeDays, ['2026-01-01']);
   assert.equal(d.reportViews, 3);
   assert.deepEqual(normalizeData({ pets: [] }).activeDays, []);
+});
+
+test('installContext detects in-app browsers before OS', () => {
+  const iosSafari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+  const kakaoIos = iosSafari + ' KAKAOTALK 10.8.0';
+  const naverAndroid = 'Mozilla/5.0 (Linux; Android 14; SM-S918N; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0 Mobile Safari/537.36 NAVER(inapp; search; 2000; 12.9.1)';
+  const insta = iosSafari + ' Instagram 300.0';
+  const androidChrome = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36';
+  const genericWebView = 'Mozilla/5.0 (Linux; Android 14; SM-S918N; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0 Mobile Safari/537.36';
+  assert.equal(installContext(iosSafari), 'ios');
+  assert.equal(installContext(kakaoIos), 'kakao');
+  assert.equal(installContext(naverAndroid), 'naver');
+  assert.equal(installContext(insta), 'inapp');
+  assert.equal(installContext(genericWebView), 'inapp');
+  assert.equal(installContext(androidChrome), 'android');
+  assert.equal(installContext('Mozilla/5.0 (Windows NT 10.0) Chrome/120.0'), 'desktop');
+  assert.equal(installContext(kakaoIos, true), 'standalone');
 });
