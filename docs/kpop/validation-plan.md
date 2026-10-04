@@ -11,7 +11,7 @@
 
 ## 소개 페이지
 - 주소: https://plum98266-sketch.github.io/GORBO/kpop/ (main 머지 후 배포)
-- `kpop/index.html` 맨 아래 `WAITLIST_URL`에 신청 폼 주소를 넣으면 신청 버튼이 켜집니다.
+- 신청 폼: https://forms.gle/Q95DVgc8iwAaUJf46 (`kpop/index.html`의 `WAITLIST_URL`에 연결됨)
 
 ## 대기자 신청 폼 (구글 폼으로 5분이면 만듦)
 폼 제목: `POB Map waitlist`
