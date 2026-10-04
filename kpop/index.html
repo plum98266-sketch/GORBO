@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>POB Map</title>
+  <meta name="description" content="Every K-pop comeback's pre-order benefits from Korean and global stores, in English, the day they're announced. Plus a free, unlimited photocard binder.">
+  <meta name="theme-color" content="#ff3d7f">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="POB Map — never miss a pre-order benefit again">
+  <meta property="og:description" content="Which store gives which POB, until when, and whether it ships to you. In English, first. Join the waitlist.">
+  <meta property="og:url" content="https://plum98266-sketch.github.io/GORBO/kpop/">
+  <meta name="twitter:card" content="summary">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    /* Layout: a single narrow column of "toploader" cards, like a binder page. */
+    :root {
+      --bg: #fff6fa;
+      --ink: #1d1420;
+      --muted: #6f5f72;
+      --card: #ffffff;
+      --line: #f0dbe6;
+      --pink: #ff3d7f;
+      --pink-ink: #ffffff;
+      --lilac: #ece4ff;
+      --mint: #dff7ec;
+      --mint-ink: #0f6b45;
+      --amber: #fff1d6;
+      --amber-ink: #8a5300;
+      --display: 'Archivo Black', 'Arial Black', system-ui, sans-serif;
+      --body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --mono: 'DM Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #160f18; --ink: #f7eef6; --muted: #b6a3b5; --card: #211722; --line: #3a2a3b;
+        --lilac: #2c2342; --mint: #12301f; --mint-ink: #7fe0b0; --amber: #3a2a10; --amber-ink: #ffcf7a;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #160f18; --ink: #f7eef6; --muted: #b6a3b5; --card: #211722; --line: #3a2a3b;
+      --lilac: #2c2342; --mint: #12301f; --mint-ink: #7fe0b0; --amber: #3a2a10; --amber-ink: #ffcf7a;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { background: var(--bg); color: var(--ink); font: 17px/1.55 var(--body); }
+    .wrap { max-width: 680px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 28px; }
+    h1, h2 { font-family: var(--display); font-weight: 400; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+    h1 { font-size: clamp(38px, 9vw, 64px); line-height: 1.02; }
+    h2 { font-size: 26px; line-height: 1.15; }
+    p { margin: 0; }
+    .muted { color: var(--muted); }
+    .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 20px; }
+    .brand i { width: 26px; height: 36px; border-radius: 5px; background: var(--pink); display: inline-block; transform: rotate(-8deg); box-shadow: 4px 2px 0 var(--lilac); }
+    .hero { display: grid; gap: 18px; padding-top: 12px; }
+    .hero h1 em { font-style: normal; color: var(--pink); }
+    .lead { font-size: 19px; max-width: 34ch; }
+    .cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; padding: 0 26px; border-radius: 999px; border: 0;
+      background: var(--pink); color: var(--pink-ink); font: 700 17px var(--body); text-decoration: none; cursor: pointer; width: fit-content; }
+    .cta:focus-visible, a:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+    .note { font-size: 14px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 14px; }
+    .eyebrow { font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .sample-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .tag { font: 500 12px var(--mono); padding: 3px 8px; border-radius: 6px; background: var(--lilac); }
+    .table-scroll { overflow-x: auto; margin-inline: -4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 460px; font-variant-numeric: tabular-nums; }
+    th { text-align: left; font: 500 12px var(--mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 8px 6px; border-bottom: 1px solid var(--line); }
+    td { padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    .pill { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+    .yes { background: var(--mint); color: var(--mint-ink); }
+    .soon { background: var(--amber); color: var(--amber-ink); }
+    .features { display: grid; gap: 14px; }
+    .feature { display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; }
+    .feature b { display: block; font-size: 18px; margin-bottom: 2px; }
+    .icon { width: 44px; height: 56px; border-radius: 8px; background: var(--lilac); display: grid; place-items: center; font-size: 22px; }
+    .faq { display: grid; gap: 10px; }
+    details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    summary { cursor: pointer; font-weight: 700; }
+    details p { margin-top: 8px; color: var(--muted); }
+    .closing { text-align: center; display: grid; gap: 14px; justify-items: center; padding: 8px 0; }
+    footer { font-size: 13px; color: var(--muted); text-align: center; }
+    @media (prefers-reduced-motion: no-preference) {
+      .brand i { transition: transform .3s; }
+      .brand:hover i { transform: rotate(4deg); }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="brand"><i aria-hidden="true"></i>POB Map</div>
+
+    <section class="hero">
+      <h1>Never miss a <em>POB</em> again.</h1>
+      <p class="lead">Every comeback's pre-order benefits from Korean and global stores, in English, the day they're announced.</p>
+      <a class="cta" id="cta-top" href="#join">Join the waitlist →</a>
+      <p class="note muted">Free to join. iPhone first, Android right after. Built in Korea by an indie developer.</p>
+    </section>
+
+    <section class="card" aria-labelledby="sample-title">
+      <div class="sample-head">
+        <h2 id="sample-title">What you'll see for each comeback</h2>
+        <span class="tag">Sample · fictional group</span>
+      </div>
+      <p class="muted">“STARLINE — 3rd Mini Album”, pre-orders open now</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Store</th><th>POB</th><th>Ends (KST)</th><th>Ships to you</th></tr></thead>
+          <tbody>
+            <tr><td>Store A (KR)</td><td>1 random of 5 selfie cards</td><td>Oct 20</td><td><span class="pill yes">Worldwide</span></td></tr>
+            <tr><td>Store B (KR)</td><td>Lucky draw, signed set</td><td>Oct 18</td><td><span class="pill soon">KR only · use a forwarder</span></td></tr>
+            <tr><td>Store C (Global)</td><td>Store-exclusive unit card</td><td>Oct 22</td><td><span class="pill yes">US · EU · JP</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note muted">Store details are posted in Korean first. We translate and organize them so you can decide where to buy before the deadline.</p>
+    </section>
+
+    <section class="features" aria-label="Features">
+      <div class="feature"><span class="icon" aria-hidden="true">📍</span><div><b>POB map for every comeback</b><span class="muted">Which store gives which card, until when, and whether it ships to your country.</span></div></div>
+      <div class="feature"><span class="icon" aria-hidden="true">🔔</span><div><b>Deadline alerts for your groups</b><span class="muted">Follow your bias groups and get a heads-up before pre-orders close.</span></div></div>
+      <div class="feature"><span class="icon" aria-hidden="true">📒</span><div><b>A binder with no card limit</b><span class="muted">Track have, want, and missing cards. No paywall at 500 cards.</span></div></div>
+      <div class="feature"><span class="icon" aria-hidden="true">₩</span><div><b>Korean market price check</b><span class="muted">See what a card typically sells for in Korea before you trade or buy.</span></div></div>
+    </section>
+
+    <section class="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Questions</h2>
+      <details><summary>Is this an official app?</summary><p>No. POB Map is an independent, fan-focused tool. It isn't affiliated with any agency, artist, or store.</p></details>
+      <details><summary>Will you host photocard images?</summary><p>No official images are copied. Cards are described by name and set, and your binder uses photos you take yourself.</p></details>
+      <details><summary>How much will it cost?</summary><p>The POB map and basic binder will be free. We'll ask the waitlist before deciding on any paid extras.</p></details>
+      <details><summary>What do you do with my email?</summary><p>We only use it to tell you when the app launches and to ask a few quick questions. Unsubscribe anytime.</p></details>
+    </section>
+
+    <section class="closing" id="join">
+      <h2>Be first in line</h2>
+      <p class="muted">Tell us your groups so we cover them from day one.</p>
+      <a class="cta" id="cta-join" href="#">Join the waitlist →</a>
+      <p class="note muted" id="join-note"></p>
+    </section>
+
+    <footer>© 2026 POB Map · Independent fan tool, not affiliated with any agency or store.</footer>
+  </main>
+
+  <script>
+    // Waitlist form (Google Forms, Tally, etc.). Paste the public form link here to open the waitlist.
+    const WAITLIST_URL = '';
+
+    const join = document.getElementById('cta-join');
+    const note = document.getElementById('join-note');
+    if (WAITLIST_URL) {
+      join.href = WAITLIST_URL;
+      join.target = '_blank';
+      join.rel = 'noopener';
+      note.textContent = 'Takes 30 seconds.';
+    } else {
+      join.removeAttribute('href');
+      join.setAttribute('aria-disabled', 'true');
+      join.style.opacity = '0.55';
+      join.style.cursor = 'default';
+      note.textContent = 'The waitlist opens very soon.';
+    }
+  </script>
+</body>
+</html>
