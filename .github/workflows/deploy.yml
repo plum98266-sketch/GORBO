@@ -37,8 +37,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # 심장지킴이 앱은 사이트 루트, K-pop 소개 페이지는 /kpop/ 에 함께 배포한다.
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp -r app/. _site/
+          cp -r kpop _site/kpop
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: app
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
