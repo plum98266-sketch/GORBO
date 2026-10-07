@@ -39,9 +39,23 @@ app/
   js/app.js     화면 렌더링과 이벤트
 tests/core.test.mjs
 scripts/build-preview.mjs   미리보기용 빌드
+scripts/minimax-marketing.mjs  MiniMax 홍보 문구·이미지 생성
 .github/workflows/deploy.yml  테스트 + GitHub Pages 배포
 docs/market-analysis.md
 ```
+
+## 홍보 콘텐츠 만들기 (MiniMax)
+`scripts/minimax-marketing.mjs`는 MiniMax API로 채널별 홍보 문구와 홍보 이미지를 만듭니다. API 키는 이 스크립트를 실행하는 컴퓨터에서만 쓰고, 앱(`app/`)에는 넣지 않습니다.
+```bash
+export MINIMAX_API_KEY=...            # https://platform.minimax.io 에서 발급
+npm run marketing -- copy instagram --n 3          # cafe | instagram | blog | kakao | shorts
+npm run marketing -- copy cafe --extra "말티즈 보호자 대상"
+npm run marketing -- image --ratio 9:16 --n 2      # 기본 프롬프트 2종, --prompt로 직접 지정 가능
+npm run marketing -- copy blog --dry-run           # API를 부르지 않고 보낼 요청만 확인
+```
+- 결과는 `marketing-out/`에 저장되며 git에 올라가지 않습니다.
+- 중국 계정은 `MINIMAX_BASE_URL=https://api.minimaxi.com`, 모델 변경은 `MINIMAX_MODEL`(기본 `MiniMax-M2.7`).
+- 문구 프롬프트는 진단·치료 효과를 주장하지 않고 "진단을 대신하지 않는다"는 안내를 넣도록 되어 있습니다. 올리기 전에 직접 한 번 읽어 보세요.
 
 ## 베타 운영
 베타 모집 글, 설문 문항, 4주 판단 기준은 [docs/beta-launch.md](docs/beta-launch.md)에 있습니다.
