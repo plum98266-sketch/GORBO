@@ -39,7 +39,7 @@ app/
   js/app.js     화면 렌더링과 이벤트
 tests/core.test.mjs
 scripts/build-preview.mjs   미리보기용 빌드
-scripts/minimax-marketing.mjs  MiniMax 홍보 문구·이미지 생성
+scripts/minimax-marketing.mjs  MiniMax 홍보 문구·이미지·영상(H3) 생성
 .github/workflows/deploy.yml  테스트 + GitHub Pages 배포
 docs/market-analysis.md
 ```
@@ -51,8 +51,12 @@ export MINIMAX_API_KEY=...            # https://platform.minimax.io 에서 발�
 npm run marketing -- copy instagram --n 3          # cafe | instagram | blog | kakao | shorts
 npm run marketing -- copy cafe --extra "말티즈 보호자 대상"
 npm run marketing -- image --ratio 9:16 --n 2      # 기본 프롬프트 2종, --prompt로 직접 지정 가능
+npm run marketing -- video --extra "포메라니안"      # H3: 15초 세로 영상 + 한국어 내레이션·효과음
+npm run marketing -- video --image marketing-out/image-....jpeg --duration 10   # 이미지를 첫 장면으로
 npm run marketing -- copy blog --dry-run           # API를 부르지 않고 보낼 요청만 확인
 ```
+- `video`는 MiniMax H3 모델로 영상과 소리(내레이션·배경음·효과음)를 한 번에 만듭니다. `--prompt`가 없으면 LLM이 H3용 프롬프트(영어 장면 묘사 + 따옴표 안 한국어 내레이션 + `Sound:` 절)를 먼저 씁니다. 길이 4~15초, 해상도 768P(기본)·2K, 비율 기본 9:16. 실행 전에 예상 비용(768P 약 $0.08/초)을 보여 주고, 완성되면 `marketing-out/video-*.mp4`와 사용한 프롬프트(`.txt`)를 저장합니다.
+- H3는 화면 속 한글 글자를 정확히 못 쓰므로 프롬프트에서 화면 글자를 빼도록 했습니다. 자막은 편집 앱(CapCut 등)에서 넣으세요.
 - 결과는 `marketing-out/`에 저장되며 git에 올라가지 않습니다.
 - 중국 계정은 `MINIMAX_BASE_URL=https://api.minimaxi.com`, 모델 변경은 `MINIMAX_MODEL`(기본 `MiniMax-M2.7`).
 - 문구 프롬프트는 진단·치료 효과를 주장하지 않고 "진단을 대신하지 않는다"는 안내를 넣도록 되어 있습니다. 올리기 전에 직접 한 번 읽어 보세요.
